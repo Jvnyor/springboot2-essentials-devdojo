@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Anime {
 
-	private long id;
+	private Long id;
 	
 	private String name;
 }
