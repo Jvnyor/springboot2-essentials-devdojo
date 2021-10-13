@@ -12,9 +12,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import academy.devdojo.springboot2.domain.Anime;
+import academy.devdojo.springboot2.requests.AnimePostRequestBody;
+import academy.devdojo.springboot2.requests.AnimePutRequestBody;
 import academy.devdojo.springboot2.service.AnimeService;
 import academy.devdojo.springboot2.util.DateUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,29 +35,29 @@ public class AnimeController {
 	private final DateUtil dateUtil;
 	private final AnimeService animeService;
 	
-	@GetMapping("/list")
+	@GetMapping
 	@Operation(description = "List of all animes")
 	public ResponseEntity<List<Anime>> list() {
 		log.info(dateUtil.formatLocalDateTimeToDatabaseStyle(LocalDateTime.now()));
 		return ResponseEntity.ok(animeService.listAll());
 	}
 	
-	@GetMapping("/id/{id}")
+	@GetMapping("/{id}")
 	@Operation(description = "Find animes by id")
 	public ResponseEntity<Anime> id(@PathVariable long id) {
-		return ResponseEntity.ok(animeService.findById(id));
+		return ResponseEntity.ok(animeService.findByIdOrThrowBadRequestException(id));
 	}
-	
-	@GetMapping("/name/{name}")
+
+	@GetMapping("/find")
 	@Operation(description = "Find animes by name")
-	public ResponseEntity<Anime> name(@PathVariable String name) {
+	public ResponseEntity<List<Anime>> name(@RequestParam String name) {
 		return ResponseEntity.ok(animeService.findByName(name));
 	}
 	
 	@PostMapping("/add")
 	@Operation(description = "Add animes")
-	public ResponseEntity<Anime> save(@RequestBody Anime anime) {
-		return new ResponseEntity<>(animeService.save(anime), HttpStatus.CREATED);
+	public ResponseEntity<Anime> save(@RequestBody AnimePostRequestBody animePostRequestBody) {
+		return new ResponseEntity<>(animeService.save(animePostRequestBody), HttpStatus.CREATED);
 	}
 	
 	@DeleteMapping("/delete/{id}")
@@ -64,9 +67,10 @@ public class AnimeController {
 		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
 	
-	@PutMapping("/put/{id}")
+	@PutMapping("/replace")
 	@Operation(description = "Delete a anime by id")
-	public ResponseEntity<Void> replace(@RequestBody Anime anime) {
-		return new ResponseEntity<>(animeService.replace(anime), HttpStatus.ACCEPTED);
+	public ResponseEntity<Void> replace(@RequestBody AnimePutRequestBody animePutRequestBody) {
+		animeService.replace(animePutRequestBody);
+		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
 }

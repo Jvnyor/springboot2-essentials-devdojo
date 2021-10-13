@@ -1,57 +1,50 @@
 package academy.devdojo.springboot2.service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import academy.devdojo.springboot2.domain.Anime;
+import academy.devdojo.springboot2.mapper.AnimeMapper;
+import academy.devdojo.springboot2.repository.AnimeRepository;
+import academy.devdojo.springboot2.requests.AnimePostRequestBody;
+import academy.devdojo.springboot2.requests.AnimePutRequestBody;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class AnimeService {
-//  private final AnimeRepository animeRepository;
-	private static List<Anime> animes;
-	static {
-		animes = new ArrayList<>(List.of(new Anime(1L,"DBZ"), new Anime(2L,"Berserk")));
-	}
+	
+	private final AnimeRepository animeRepository;
+	
 	public List<Anime> listAll() {
-		return animes;
+		return animeRepository.findAll();
 	}
 	
-	public Anime findById(long id) {
-        return animes.stream()
-                .filter(anime -> anime.getId().equals(id))
-                .findFirst()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Anime not Found"));
+	public List<Anime> findByName(String name) {
+		return animeRepository.findByName(name);
+	}
+	
+	public Anime findByIdOrThrowBadRequestException(long id) {
+        return animeRepository.findById(id)
+        		.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Anime not Found"));
     }
 	
-	public Anime findByName(String name) {
-		return animes.stream()
-                .filter(anime -> anime.getName().equals(name))
-                .findFirst()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Anime not Found"));
-	}
-
-	public Anime save(Anime anime) {
-//		for (int i = animes.size(); i==animes.size(); i+=1) {
-//			anime.setId(Long.valueOf(i));
-//		}
-		anime.setId(ThreadLocalRandom.current().nextLong(3,1000));
-		animes.add(anime);
-		return anime;
+	public Anime save(AnimePostRequestBody animePostRequestBody) {
+		return animeRepository.save(AnimeMapper.INSTANCE.toAnime(animePostRequestBody));
 	}
 
 	public void delete(Long id) {
-		animes.remove(findById(id));
+		animeRepository.delete(findByIdOrThrowBadRequestException(id));
 	}
 
-	public void replace(Anime anime) {
-		delete(anime.getId());
-		animes.add(anime);
+	public void replace(AnimePutRequestBody animePutRequestBody) {
+		Anime savedAnime = findByIdOrThrowBadRequestException(animePutRequestBody.getId());
+		Anime anime = AnimeMapper.INSTANCE.toAnime(animePutRequestBody);
+		anime.setId(savedAnime.getId());
+		animeRepository.save(anime);
 	}
-	
 	
 }
