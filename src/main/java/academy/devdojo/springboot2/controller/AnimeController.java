@@ -3,6 +3,10 @@ package academy.devdojo.springboot2.controller;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import javax.validation.Valid;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -37,9 +41,9 @@ public class AnimeController {
 	
 	@GetMapping
 	@Operation(description = "List of all animes")
-	public ResponseEntity<List<Anime>> list() {
+	public ResponseEntity<Page<Anime>> list(Pageable pageable) {
 		log.info(dateUtil.formatLocalDateTimeToDatabaseStyle(LocalDateTime.now()));
-		return ResponseEntity.ok(animeService.listAll());
+		return ResponseEntity.ok(animeService.listAll(pageable));
 	}
 	
 	@GetMapping("/{id}")
@@ -56,7 +60,7 @@ public class AnimeController {
 	
 	@PostMapping("/add")
 	@Operation(description = "Add animes")
-	public ResponseEntity<Anime> save(@RequestBody AnimePostRequestBody animePostRequestBody) {
+	public ResponseEntity<Anime> save(@RequestBody @Valid AnimePostRequestBody animePostRequestBody) {
 		return new ResponseEntity<>(animeService.save(animePostRequestBody), HttpStatus.CREATED);
 	}
 	

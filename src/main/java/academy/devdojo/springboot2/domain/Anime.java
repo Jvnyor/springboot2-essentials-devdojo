@@ -23,7 +23,6 @@ public class Anime {
 
 	@Id
 	@Column(name = "id")
-	@NotNull
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	
