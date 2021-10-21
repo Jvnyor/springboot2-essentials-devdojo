@@ -1,6 +1,5 @@
 package academy.devdojo.springboot2.controller;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -23,49 +22,43 @@ import academy.devdojo.springboot2.domain.Anime;
 import academy.devdojo.springboot2.requests.AnimePostRequestBody;
 import academy.devdojo.springboot2.requests.AnimePutRequestBody;
 import academy.devdojo.springboot2.service.AnimeService;
-import academy.devdojo.springboot2.util.DateUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 
 @RestController
-@Log4j2
 @RequiredArgsConstructor
 @Tag(name = "Animes API")
 @RequestMapping("/animes")
 public class AnimeController {
 
-	private final DateUtil dateUtil;
 	private final AnimeService animeService;
 	
 	@GetMapping
 	@Operation(description = "List of all animes in pages")
 	public ResponseEntity<Page<Anime>> list(Pageable pageable) {
-		log.info(dateUtil.formatLocalDateTimeToDatabaseStyle(LocalDateTime.now()));
 		return ResponseEntity.ok(animeService.listAll(pageable));
 	}
 	
 	@GetMapping("/all")
 	@Operation(description = "List of all animes")
 	public ResponseEntity<List<Anime>> listAll() {
-		log.info(dateUtil.formatLocalDateTimeToDatabaseStyle(LocalDateTime.now()));
 		return ResponseEntity.ok(animeService.listAllNonPageable());
 	}
 	
 	@GetMapping("/{id}")
 	@Operation(description = "Find animes by id")
-	public ResponseEntity<Anime> id(@PathVariable long id) {
+	public ResponseEntity<Anime> findById(@PathVariable long id) {
 		return ResponseEntity.ok(animeService.findByIdOrThrowBadRequestException(id));
 	}
 
 	@GetMapping("/find")
 	@Operation(description = "Find animes by name")
-	public ResponseEntity<List<Anime>> name(@RequestParam String name) {
+	public ResponseEntity<List<Anime>> findByName(@RequestParam String name) {
 		return ResponseEntity.ok(animeService.findByName(name));
 	}
 	
-	@PostMapping("/add")
+	@PostMapping
 	@Operation(description = "Add animes")
 	public ResponseEntity<Anime> save(@RequestBody @Valid AnimePostRequestBody animePostRequestBody) {
 		return new ResponseEntity<>(animeService.save(animePostRequestBody), HttpStatus.CREATED);
