@@ -1,12 +1,5 @@
 package academy.devdojo.springboot2.integration;
 
-import academy.devdojo.springboot2.domain.Anime;
-import academy.devdojo.springboot2.repository.AnimeRepository;
-import academy.devdojo.springboot2.requests.AnimePostRequestBody;
-import academy.devdojo.springboot2.util.AnimeCreator;
-import academy.devdojo.springboot2.util.AnimePostRequestBodyCreator;
-import academy.devdojo.springboot2.wrapper.PageableResponse;
-
 import java.util.List;
 
 import org.assertj.core.api.Assertions;
@@ -24,8 +17,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
+
+import academy.devdojo.springboot2.domain.Anime;
+import academy.devdojo.springboot2.repository.AnimeRepository;
+import academy.devdojo.springboot2.requests.AnimePostRequestBody;
+import academy.devdojo.springboot2.util.AnimeCreator;
+import academy.devdojo.springboot2.util.AnimePostRequestBodyCreator;
+import academy.devdojo.springboot2.wrapper.PageableResponse;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestDatabase
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class AnimeControllerIT {
 
 	@Autowired
@@ -73,82 +76,94 @@ class AnimeControllerIT {
         Assertions.assertThat(animes.get(0).getName()).isEqualTo(expectedName);
     }
 
-//	@Test
-//    @DisplayName("findById returns anime when successful")
-//    void findById_ReturnsAnime_WhenSuccessful(){
-//        Long expectedId = AnimeCreator.createValidAnime().getId();
-//
-//        Anime anime = animeController.findById(1).getBody();
-//
-//        Assertions.assertThat(anime).isNotNull();
-//
-//        Assertions.assertThat(anime.getId()).isNotNull().isEqualTo(expectedId);
-//    }
-//	
-//	@Test
-//    @DisplayName("findByName returns list of anime when successful")
-//    void findByName_ReturnsListOfAnime_WhenSuccessful(){
-//		String expectName = AnimeCreator.createValidAnime().getName();
-//		List<Anime> animes = animeController.findByName("anime").getBody();
-//		
-//		Assertions.assertThat(animes)
-//				.isNotNull()
-//				.isNotEmpty()
-//				.hasSize(1);
-//		
-//		Assertions.assertThat(animes.get(0).getName()).isEqualTo(expectName);
-//    }
-//	
-//	@Test
-//    @DisplayName("findByName returns an empty list of anime when anime is not found")
-//    void findByName_ReturnsEmptyListOfAnime_WhenAnimeIsNotFound(){
-//		BDDMockito.when(animeServiceMock.findByName(ArgumentMatchers.anyString()))
-//        .thenReturn(Collections.emptyList());
-//		
-//		List<Anime> animes = animeController.findByName("anime").getBody();
-//		
-//		Assertions.assertThat(animes)
-//				.isNotNull()
-//				.isEmpty();
-//		
-//    }
-//	
-//	@Test
-//    @DisplayName("save returns anime when successful")
-//    void save_ReturnsAnime_WhenSuccessful(){
-//
-//        Anime anime = animeController.save(AnimePostRequestBodyCreator.createAnimePostRequestBody()).getBody();
-//
-//        Assertions.assertThat(anime).isNotNull().isEqualTo(AnimeCreator.createValidAnime());
-//    }
-//	
-//	@Test
-//    @DisplayName("replace updates anime when successful")
-//    void replace_UpdatesAnime_WhenSuccessful(){
-//
-//		Assertions.assertThatCode(() -> animeController.replace(AnimePutRequestBodyCreator.createAnimePutRequestBody()))
-//				.doesNotThrowAnyException();
-//		
-//		ResponseEntity<Void> entity = animeController.replace(AnimePutRequestBodyCreator.createAnimePutRequestBody());
-//        
-//        Assertions.assertThat(entity).isNotNull();
-//        
-//        Assertions.assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
-//
-//    }
-//	
-//	@Test
-//    @DisplayName("delete removes anime when successful")
-//    void delete_RemovesAnime_WhenSuccessful(){
-//
-//		Assertions.assertThatCode(() -> animeController.delete(1L))
-//				.doesNotThrowAnyException();
-//		
-//		ResponseEntity<Void> entity = animeController.delete(1L);
-//        
-//        Assertions.assertThat(entity).isNotNull();
-//        
-//        Assertions.assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
-//
-//    }
+	@Test
+    @DisplayName("findById returns anime when successful")
+    void findById_ReturnsAnime_WhenSuccessful(){
+		Anime savedAnime = animeRepository.save(AnimeCreator.createAnimeToBeSaved());
+		
+        Long expectedId = savedAnime.getId();
+
+        Anime anime = testRestTemplate.getForObject("/animes/{id}", Anime.class, expectedId);
+
+        Assertions.assertThat(anime).isNotNull();
+
+        Assertions.assertThat(anime.getId()).isNotNull().isEqualTo(expectedId);
+    }
+	
+	@Test
+    @DisplayName("findByName returns list of anime when successful")
+    void findByName_ReturnsListOfAnime_WhenSuccessful(){
+		animeRepository.save(AnimeCreator.createAnimeToBeSaved());
+		String expectName = AnimeCreator.createValidAnime().getName();
+		String url = String.format("/animes/find?name=%s", expectName);
+		List<Anime> animes = testRestTemplate.exchange(url, HttpMethod.GET, null,
+				new ParameterizedTypeReference<List<Anime>>(){
+		}).getBody();
+		
+		Assertions.assertThat(animes)
+				.isNotNull()
+				.isNotEmpty()
+				.hasSize(1);
+		
+		Assertions.assertThat(animes.get(0).getName()).isEqualTo(expectName);
+    }
+	
+	@Test
+    @DisplayName("findByName returns an empty list of anime when anime is not found")
+    void findByName_ReturnsEmptyListOfAnime_WhenAnimeIsNotFound(){
+		List<Anime> animes = testRestTemplate.exchange("/animes/find?name=dbz", HttpMethod.GET, null,
+				new ParameterizedTypeReference<List<Anime>>(){
+		}).getBody();
+		
+		Assertions.assertThat(animes)
+				.isNotNull()
+				.isEmpty();
+		
+    }
+	
+	@Test
+    @DisplayName("save returns anime when successful")
+    void save_ReturnsAnime_WhenSuccessful(){
+		AnimePostRequestBody animePostRequestBody = AnimePostRequestBodyCreator.createAnimePostRequestBody();
+        ResponseEntity<Anime> animeResponseEntity = testRestTemplate.postForEntity("/animes", animePostRequestBody, Anime.class);
+
+        Assertions.assertThat(animeResponseEntity).isNotNull();
+        Assertions.assertThat(animeResponseEntity.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        Assertions.assertThat(animeResponseEntity.getBody()).isNotNull();
+        Assertions.assertThat(animeResponseEntity.getBody().getId()).isNotNull();
+    }
+	
+	@Test
+    @DisplayName("replace updates anime when successful")
+    void replace_UpdatesAnime_WhenSuccessful(){
+		Anime savedAnime = animeRepository.save(AnimeCreator.createAnimeToBeSaved());
+		
+		savedAnime.setName("Boku no Hero");
+		
+        ResponseEntity<Void> animeResponseEntity = testRestTemplate.exchange("/animes/replace",
+        		HttpMethod.PUT,
+        		new HttpEntity<>(savedAnime),
+        		Void.class);
+
+        Assertions.assertThat(animeResponseEntity).isNotNull();
+        Assertions.assertThat(animeResponseEntity.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+    }
+	
+	@Test
+    @DisplayName("delete removes anime when successful")
+    void delete_RemovesAnime_WhenSuccessful(){
+		Anime savedAnime = animeRepository.save(AnimeCreator.createAnimeToBeSaved());
+		
+        ResponseEntity<Void> animeResponseEntity = testRestTemplate.exchange("/animes/delete/{id}",
+        		HttpMethod.DELETE,
+        		null,
+        		Void.class,
+        		savedAnime.getId()
+        );
+
+        Assertions.assertThat(animeResponseEntity).isNotNull();
+        Assertions.assertThat(animeResponseEntity.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+    }
 }
