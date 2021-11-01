@@ -1,31 +1,28 @@
 package academy.devdojo.springboot2.integration;
 
-import java.util.Collections;
+import academy.devdojo.springboot2.domain.Anime;
+import academy.devdojo.springboot2.repository.AnimeRepository;
+import academy.devdojo.springboot2.requests.AnimePostRequestBody;
+import academy.devdojo.springboot2.util.AnimeCreator;
+import academy.devdojo.springboot2.util.AnimePostRequestBodyCreator;
+import academy.devdojo.springboot2.wrapper.PageableResponse;
+
 import java.util.List;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
-import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
-import academy.devdojo.springboot2.domain.Anime;
-import academy.devdojo.springboot2.repository.AnimeRepository;
-import academy.devdojo.springboot2.util.AnimeCreator;
-import academy.devdojo.springboot2.util.AnimePostRequestBodyCreator;
-import academy.devdojo.springboot2.util.AnimePutRequestBodyCreator;
-import academy.devdojo.springboot2.wrapper.PageableResponse;
+import org.springframework.test.annotation.DirtiesContext;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestDatabase
@@ -58,21 +55,23 @@ class AnimeControllerIT {
 	}
 	
 	@Test
-	@DisplayName("listAll returns list of animes when succesful")
-	void listAll_ReturnsListOfAnimes_WhenSuccesful() {
-		Anime savedAnime = animeRepository.save(AnimeCreator.createAnimeToBeSaved());
-		String expectName = savedAnime.getName();
-		
-		List<Anime> animes = testRestTemplate.exchange("/animes/all", HttpMethod.GET, null,
-				new ParameterizedTypeReference<List<Anime>>(){
-		}).getBody();
-		
-		Assertions.assertThat(animes)
-			.isNotNull()
-			.isNotEmpty()
-			.hasSize(1);
-		Assertions.assertThat(animes.get(0).getName()).isEqualTo(expectName);
-	}
+    @DisplayName("listAll returns list of animes when successful")
+    void listAll_ReturnsListOfAnimes_WhenSuccessful() {
+        Anime savedAnime = animeRepository.save(AnimeCreator.createAnimeToBeSaved());
+
+        String expectedName = savedAnime.getName();
+
+        List<Anime> animes = testRestTemplate.exchange("/animes/all", HttpMethod.GET, null,
+                new ParameterizedTypeReference<List<Anime>>() {
+                }).getBody();
+
+        Assertions.assertThat(animes)
+                .isNotNull()
+                .isNotEmpty()
+                .hasSize(2);
+
+        Assertions.assertThat(animes.get(0).getName()).isEqualTo(expectedName);
+    }
 
 //	@Test
 //    @DisplayName("findById returns anime when successful")
