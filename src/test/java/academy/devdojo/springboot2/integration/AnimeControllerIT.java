@@ -17,8 +17,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 
-import org.springframework.test.annotation.DirtiesContext.ClassMode;
-
 import academy.devdojo.springboot2.domain.Anime;
 import academy.devdojo.springboot2.repository.AnimeRepository;
 import academy.devdojo.springboot2.requests.AnimePostRequestBody;
@@ -71,7 +69,7 @@ class AnimeControllerIT {
         Assertions.assertThat(animes)
                 .isNotNull()
                 .isNotEmpty()
-                .hasSize(2);
+                .hasSize(1);
 
         Assertions.assertThat(animes.get(0).getName()).isEqualTo(expectedName);
     }
